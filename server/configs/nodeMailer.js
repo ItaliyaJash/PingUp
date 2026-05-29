@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import nodemailer from 'nodemailer'
 
 // create a transporter obj using the SMTP setting
@@ -10,7 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendEmail = async({to, from, body}) => {
+const sendEmail = async({to, subject, body}) => {
   const  response = await transporter.sendMail({
     from: process.env.SENDER_EMAIL,
     to,
