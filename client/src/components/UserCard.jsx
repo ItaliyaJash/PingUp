@@ -1,17 +1,52 @@
 import React from 'react'
 import { dummyUserData } from '../assets/assets'
 import { MapPin, MessageCircle, Plus, UserPlus } from 'lucide-react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
+import api from '../api/axios.js'
+import { fetchUser } from '../features/user/userSlice'
 
-function UserCard({ user = dummyUserData, currentUser = {} }) { // Added currentUser as a prop with a default empty object
+function UserCard({ user = useSelector((state) => state.user.value), currentUser = {} }) { // Added currentUser as a prop with a default empty object
+
+    const {getToken} = useAuth()
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
 
     const handleFollow = async () => {
-        // Logic for following a user
-        console.log('Follow button clicked'); // Added for debugging
+        try {
+            const { data } = await api.post('/api/user/follow', {id: user._id}, {
+                headers: { Authorization: `Bearer ${await getToken()}` }
+            })
+            if(data.success) {
+                toast.success(data.message)
+                dispatch(fetchUser(await getToken()))
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast(error.message)
+        }
     }
 
     const handleConnectionRequest = async () => {
-        // Logic for sending a connection request
-        console.log('Connection/Message button clicked'); // Added for debugging
+        if(currentUser.connections.includes(user._id)) {
+            return navigate('/messages/' + user._id)
+        }
+
+        try {
+            const { data } = await api.post('/api/user/connect', {id: user._id}, {
+                headers: { Authorization: `Bearer ${await getToken()}` }
+            })
+            if(data.success) {
+                toast.success(data.message)
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast(error.message)
+        }
     }
 
     return (
